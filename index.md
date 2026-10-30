@@ -10,14 +10,13 @@ the Arch Wiki installation guide as my main reference.
 - Installation media: Archboot ARM64 ISO
 - Virtual installation disk: 40 GiB, identified as /dev/vda
 I used the ARM64 Archboot image linked in the assignment because my Mac uses Apple
-Silicon. Some commands in the standard Arch Wiki installation guide may differ in this
-environment.
+Silicon. Some commands in the standard Arch Wiki installation guide were different than what I had to use.
 
 ## 1. Booting the installation environment
 
 I downloaded the ARM64 ISO from:
 https://release.archboot.com/aarch64/latest/iso/
-I attached it to my UTM VM and started the VM. The Archboot welcome screen appeared. I
+I attached it to my UTM VM and started the VM. I
 pressed Control + C to open a Bash prompt for the manual installation.
 I ran:
 
@@ -25,7 +24,7 @@ I ran:
 whoami
 ```
 
-This checks the current user. The output was root, confirming that I had administrative access in
+This checks the current user. The output was root, confirming that I had admin access in
 the live installation environment.
 
 ```bash
@@ -44,8 +43,8 @@ loadkeys us
 ```
 
 The command returned a “command not found” error. I did not change the keyboard layout at
-this point.
-Troubleshooting note: The Archboot environment did not provide the loadkeys command as
+this point. I went with the default.
+The Archboot environment did not provide the loadkeys command as
 expected from the standard Arch Wiki instructions.
 
 ## 3. Network connection
@@ -73,7 +72,7 @@ ping -c 3 archlinux.org
 ```
 
 This sends three ping requests to test Internet connectivity and name resolution. All three
-requests received replies, with 0% packet loss.
+requests received replies.
 
 ## 4. Identifying the installation disk
 
@@ -122,18 +121,18 @@ swap.
 After that, I had the rest of the drive to partition, so I hit enter to default the number, first and last
 section, and type.
 I now needed to format the partitions, so I took the commands from the wiki but changed them to
-/dev/vda(number)
+/dev/vda(partition name)
 
 ```bash
-mkfs.fat -F 32 /dev/efi_system_partition
+mkfs.fat -F 32 /dev/vda1
 ```
 
 ```bash
-mkswap /dev/swap_partition
+mkswap /dev/vda2
 ```
 
 ```bash
-mkfs.ext4 /dev/root_partition
+mkfs.ext4 /dev/vda3
 ```
 
 After formatting, I proceeded to mounting and ran these to mount all of them
@@ -293,16 +292,19 @@ I entered a few commands that I had to search for
 ```bash
 pacman -S grub efibootmgr
 ```
+This downloaded the actual grub manager itself
 
 ```bash
 grub-install --target=arm64-efi --efi-directory=/boot --bootloader-id=GRUB
 ```
+This configured the grub install so that it was targeted for arm64 and ran at boot on EFI Partition
 
 ```bash
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
+This pulled the boot menu, so I could verify that the bootloader finds the kernel
 
-Then exited. I unmounted using
+Then I exited. I unmounted using:
 
 ```bash
 umount –R /mnt
@@ -321,7 +323,29 @@ Logged in as root, with password
 ## GUI and Additions
 
 For the gui and other things, I had to secure my internet, because after the reboot I had no
-connection. I chose Xfce for my desktop. It is lightweight, and easy to install.
+connection. To do this I ran (from root):
+```bash
+nano /etc/systemd/network/20-wired.network
+```
+To open a network config file, then
+```INI
+[Match]
+Name=enp0s1
+
+[Network]
+DHCP=yes
+```
+Which told the system network to automatically get settings from virtual ethernet VM interface
+I started networking and DNS, and made them automatically start at each boot
+```bash
+systemctl enable --now systemd-networkd systemd-resolved
+```
+Then I connected the system DNS to the resolver
+```bash
+ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+```
+
+I chose Xfce for my desktop. It is lightweight, and easy to install.
 I ran:
 ```bash
 sudo pacman -S xfce4 xfce4-goodies
@@ -331,6 +355,8 @@ I then created a account for myself and codi (Ran as root)
 ```bash
 useradd -m -s /bin/bash taihodge
 ```
+did the same for codi, replacing taihodge with code
+
 ```bash
 useradd -m -s /bin/bash codi
 ```
