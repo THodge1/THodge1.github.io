@@ -270,7 +270,7 @@ Like the guide says, and then saved
 Keyboard layout was skipped because I didn’t set one
 Went to network config
 
-## Network Config and Final Booting
+## 7. Network Config and Final Booting
 
 For the network config I first had to set a hostname, I kept running into the issue of having to
 type TERM=xterm before my nano, so I ran
@@ -320,7 +320,7 @@ then turned the VM off
 I cleared the CD/DVD Drive and then turned it back on
 Logged in as root, with password
 
-## GUI and Additions
+## 8. GUI and Additions
 
 For the gui and other things, I had to secure my internet, because after the reboot I had no
 connection. To do this I ran (from root):
