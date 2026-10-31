@@ -83,6 +83,7 @@ lsblk
 ```
 
 The output showed:
+
 | Device | Size | Purpose |
 |---|---|---|
 | /dev/sr0 | 469.7 MiB | Attached installation ISO |
@@ -102,6 +103,7 @@ unchanged.
 ## 5. Partitioning plan
 
 My planned layout uses a GPT partition table:
+
 | Planned partition | Size | Type | Purpose |
 |---|---|---|---|
 | /dev/vda1 | 1 GiB | EFI System | Boot files, mounted at /boot |
