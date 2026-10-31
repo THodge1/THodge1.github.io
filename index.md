@@ -427,7 +427,7 @@ alias cls='clear'
 alias myip='ip -br address'
 
 # Update the system
-alias update='sudo  -Syu'
+alias update='sudo pacman -Syu'
 
 # Show available disk space
 alias space='df -h'
