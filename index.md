@@ -88,6 +88,7 @@ The output showed:
 | /dev/sr0 | 469.7 MiB | Attached installation ISO |
 | /dev/zram0 | 6 GiB | RAM-backed device used by the live environment |
 | /dev/vda | 40 GiB | Virtual disk for the installation |
+
 I also inspected the disks with:
 
 ```bash
@@ -106,6 +107,7 @@ My planned layout uses a GPT partition table:
 | /dev/vda1 | 1 GiB | EFI System | Boot files, mounted at /boot |
 | /dev/vda2 | 4 GiB | Linux swap | Swap space |
 | /dev/vda3 | Remaining space, about 35 GiB | Linux filesystem | Root filesystem, mounted at / |
+
 The command for opening the partition editor is:
 
 ```bash
@@ -114,12 +116,12 @@ fdisk /dev/vda
 
 At this point I didn’t know what to correctly type for partitioning. I looked it up and found it was
 a series of letter commands and setting sectors:
-n is partition number, last sector specifies the size of the partition, t is for what type of partition,
+g creates a new GPT partition. n creates a partition number, last sector specifies the size of the partition, t is for what type of partition,
 and the list was numbered, I chose 1 because this was my EFI System and needed one GiB.
 Next, I did the same process for my swap space, changing from +1G to +4G. using 19: Linux
 swap.
 After that, I had the rest of the drive to partition, so I hit enter to default the number, first and last
-section, and type.
+section, and type. After these drives were created, I used p to review the partitions and w to save them.
 I now needed to format the partitions, so I took the commands from the wiki but changed them to
 /dev/vda(partition name)
 
@@ -185,21 +187,25 @@ arch-chroot -S /mnt
 I then ran some stuff to set time zones
 
 ```bash
-ln -sf /usr/share/zoneinfo/Area/Location /etc/localtime
+ln -sf /usr/share/zoneinfo/America/Chicago /etc/localtime
 ```
 
 and
 
 ```bash
-hwclock –systohc
+hwclock --systohc
 ```
 
-I then went on to generate the locales which helps when setting region specific formatting
-
+I then went on to generate the locales which helps when setting region specific formatting.
+First I modified the text file for the locale
+```bash
+nano /etc/locale.gen
+```
+then removed the comment hash from en_US.UTF-8 UTF-8
+Then generated the enabled locale
 ```bash
 locale-gen
 ```
-
 And create and modify the configuring file
 
 ```bash
@@ -210,14 +216,14 @@ I ran into a problem here and realized from the command not found error that I n
 download nano, so I ran:
 
 ```bash
-pacman –S nano
+pacman -S nano
 ```
 
 Another error here, error occurred it couldn’t download the nano because of a keyring issue, so I
 ran
 
 ```bash
-pacman-key –init
+pacman-key --init
 ```
 
 and then
@@ -238,7 +244,7 @@ pacstrap /mnt archlinuxarm-keyring
 and this downloaded. I went back to the arch terminal and kept going with the guide, but first ran
 
 ```bash
-pacman-key –init
+pacman-key --init
 ```
 
 and
@@ -307,7 +313,7 @@ This pulled the boot menu, so I could verify that the bootloader finds the kerne
 Then I exited. I unmounted using:
 
 ```bash
-umount –R /mnt
+umount -R /mnt
 ```
 
 And then rebooted
@@ -380,7 +386,7 @@ For another shell I used zsh:
 sudo pacman -Syu zsh
 ```
 ```bash
-sudo chsh -s $(which zsh)
+sudo chsh -s /bin/zsh taihodge
 ```
 then to change it's color:
 ```bash
@@ -419,7 +425,7 @@ alias cls='clear'
 alias myip='ip -br address'
 
 # Update the system
-alias update='sudo pacman -Syu'
+alias update='sudo  -Syu'
 
 # Show available disk space
 alias space='df -h'
@@ -427,7 +433,14 @@ alias space='df -h'
 # Prompt before deleting files
 alias rm='rm -i'
 ```
+## 9. Other adds
 
+I also added Firefox as a browser extension to my linux gui
+To download:
+```bash
+pacman -S firefox
+```
+then to I selected between jack and pipe wire jack, which means it provided JACK compatibility through Pipewire (I typed 2). After that I had to select a provider for ttf-font. After doing some research I learned that ttf-dejavu would suit what I needed (I typed 5).
 
 
 
