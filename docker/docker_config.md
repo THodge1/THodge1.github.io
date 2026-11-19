@@ -74,7 +74,6 @@ This sent a message to my gotify to tell me that it is receiving.
 
 ## Securing the VM
 
-
 For the requirements, I needed to have PasswordAuthentication no, and it was yes. I figured out that I needed to set a ssh key.
 
 ```bash
@@ -114,6 +113,134 @@ I ran this to check it.
 sudo grep -RnE '^[[:space:]]*(Include|Match|PasswordAuthentication|KbdInteractiveAuthentication)[[:space:]]' /etc/ssh/sshd_config /etc/ssh/sshd_config.d/
 ```
 I ran this to find anything that could be setting it to yes. I found that 50-cloud-init.conf was setting it to yes, and changed that file to no.
+
+```bash
+sudo ufw status verbose
+```
+I ran this to check the ufw firewall. It came back inactive meaning the firewall is inactive.
+
+```bash
+sudo docker ps --format 'table {{.Names}}\t{{.Ports}}'
+```
+I ran this to check the ports for gotify.
+
+```bash
+sudo ss -lntup
+```
+This shows the sockets, with letters that format the results into headings and includes tcp and udp.
+
+```bash
+sudo ufw allow 22/tcp
+```
+I ran this to allow the SSH connection from laptop to continue.
+
+```bash
+sudo ufw allow 22/tcp
+```
+I ran this to allow gotify's port connection.
+
+```bash
+sudo ufw default deny incoming
+```
+Ran this to block incoming connections unless specifically allowed.
+
+```bash
+sudo ufw default allow outgoing
+```
+This allows outgoing traffic, letting the VM initiate connections.
+
+```bash
+sudo ufw enable
+```
+Enables the firewall and allows it to enable at start up.
+
+```bash
+sudo ufw status numbered
+```
+This asks for the ufw status, and checks what configurations are on currently.
+
+I then opened a new terminal tab and tested my ssh connection, and also used the hello world command above to test if gotify responds.
+
+```bash
+sudo apt upgrade && sudo apt install -y unattended-upgrades
+```
+This command allowed me to install unattended upgrades with -y being a automatic yes when prompted within the download.
+
+```bash
+sudo dpkg-reconfigure -plow unattended-upgrades
+```
+This enabled automatic updates within the unattended-upgrades.
+A blue screen popped up asking if I wanted to automatically download and install updates. I chose yes.
+
+```bash
+sudo unattended-upgrade --dry-run --debug
+```
+This command let me run the feature without actually downloading anything.
+
+## Backups and Restore Drill
+
+First, I configure the script.
+
+```bash
+sudo docker inspect gotify --format '{{range .Mounts}}{{println .Type .Source "->" .Destination}}{{end}}'
+```
+This command found where the data is stored.
+
+```bash
+sudo mkdir -p /var/backups/gotify
+```
+This command made a new backup directory for the data in gotify.
+
+```bash
+sudo docker stop gotify
+```
+Stopped gotify so I can test the backup.
+
+```bash
+sudo tar -czf "/var/backups/gotify/gotify-$(date +%Y%m%d-%H%M%S).tar.gz" -C /var/lib/docker/volumes/gotify-data/_data .
+```
+I ran this to do a few things:
+1. archive the files
+2. specifies the archive files
+3. gzips them
+
+```bash
+sudo docker start gotify
+```
+At this point start back up gotify.
+
+```bash
+sudo nano /usr/local/sbin/backup-gotify
+```
+This opens the backup file to begin the script.
+
+```bash
+set -euo pipefail
+```
+Tells the script to cancel if there are any errors.
+
+```bash
+backup_dir=/var/backups/gotify 
+data_dir=/var/lib/docker/volumes/gotify-data/_data 
+archive="$backup_dir/gotify-$(date +%Y%m%d-%H%M%S).tar.gz"
+```
+These are all made variables that makes it easier when writing out other functions later on.
+
+```bash
+trap 'docker start gotify >/dev/null' EXIT
+```
+This makes sure that if trying to start creates an error the script will exit.
+
+```bash
+if ! tar -czf "$archive" -C "$data_dir" .; then 
+        rm -f "$archive"
+        echo "Backup failed; Gotify will be restarted."
+        exit 1 
+fi
+```
+This is another error detection condition. Making sure the archive is created
+
+
 
 
 
